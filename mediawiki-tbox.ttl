@@ -1,0 +1,15 @@
+
+mw:StandardPage rdfs:subClassOf mw:Page ;
+    owl:equivalentClass [
+        a owl:Restriction ;
+        owl:onProperty mw:pageNamespaceId ;
+        owl:hasValue "0"^^xsd:integer ;
+    ].
+
+mw:BlogEntry rdfs:subClassOf mw:Page .
+
+mw:FilePage rdfs:subClassOf mw:Page .
+
+mw:Category rdfs:subClassOf mw:Page .
+
+[] a owl:AllDisjointClasses ; owl:members ( mw:StandardPage mw:BlogEntry mw:FilePage mw:Category ).

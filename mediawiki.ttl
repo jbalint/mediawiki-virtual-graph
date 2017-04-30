@@ -1,0 +1,31 @@
+# MediaWiki virtual graph for Stardog
+# stardog namespace add test --prefix mw --uri 'http://github.com/jbalint/mediawiki-virtual-graph#'
+# stardog-admin virtual add --overwrite mediawiki.properties mediawiki.ttl
+# stardog-admin virtual remove mediawiki
+# stardog query execute -r bs "select * { GRAPH <virtual://mediawiki> { ?x a mw:Page } }"
+
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix mw: <http://github.com/jbalint/mediawiki-virtual-graph#> .
+@prefix sm: <tag:stardog:api:mapping:> .
+
+mw:Page{page_id} a mw:Page ;
+    mw:pageTitle "{nice_title}" ;
+    mw:pageNamespaceId "{page_namespace}"^^xsd:integer ;
+    # TODO : this prefix is necessary until Stardog issue #3509 is fixed. then it can be embedded in the query
+    # Actually this is fine
+    mw:pageUrl <https://localhost/mediawiki/index.php/{page_title}> ;
+    mw:pageLatestRev "{page_latest}"^^xsd:integer ;
+    sm:map [
+        sm:query """
+select
+  page_id,
+  replace(page_title, '_', ' ') as nice_title,
+  page_namespace,
+  page_title,
+  page_touched,
+  page_latest
+from page
+"""
+    ]
+.
