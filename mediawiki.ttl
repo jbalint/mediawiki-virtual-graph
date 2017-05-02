@@ -18,14 +18,17 @@ mw:Page{page_id} a mw:Page ;
     mw:pageLatestRev "{page_latest}"^^xsd:integer ;
     sm:map [
         sm:query """
+select *,  replace(page_title, '_', ' ') as nice_title
+from (
 select
   page_id,
-  replace(page_title, '_', ' ') as nice_title,
-  page_namespace,
-  page_title,
+  p.page_namespace,
   page_touched,
-  page_latest
-from page
+  page_latest,
+  concat(coalesce(concat(ns.ns_name, ':'), ''), page_title) as page_title
+from page p left join jbalint_namespaces ns
+on p.page_namespace = ns.page_namespace
+) as x
 """
     ]
 .
