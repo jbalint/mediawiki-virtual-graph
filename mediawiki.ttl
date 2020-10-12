@@ -12,10 +12,8 @@
 mw:Page{page_id} a mw:Page ;
     mw:pageTitle "{nice_title}" ;
     mw:pageNamespaceId "{page_namespace}"^^xsd:integer ;
-    # TODO : this prefix is necessary until Stardog issue #3509 is fixed. then it can be embedded in the query
-    # Actually this is fine
     mw:pageUrl <https://localhost/mediawiki/index.php/{page_title}> ;
-    mw:pageLatestRev "{page_latest}"^^xsd:integer ;
+    mw:pageLatestRev mw:Revision{page_latest} ;
     sm:map [
         sm:query """
 select *,  replace(page_title, '_', ' ') as nice_title
@@ -31,4 +29,11 @@ on p.page_namespace = ns.page_namespace
 ) as x
 """
     ]
+.
+
+mw:Revision{rev_id} a mw:Revision ;
+    mw:text "{`text`}" ;
+    sm:map [
+        sm:query """ select r.rev_id, t.old_text as `text` from revision r inner join text t on r.rev_text_id = t.old_id """ ;
+    ] ;
 .
