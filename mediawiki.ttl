@@ -34,6 +34,12 @@ on p.page_namespace = ns.page_namespace
 mw:Revision{rev_id} a mw:Revision ;
     mw:text "{`text`}" ;
     sm:map [
-        sm:query """ select r.rev_id, t.old_text as `text` from revision r inner join text t on r.rev_text_id = t.old_id """ ;
+        sm:query """
+select r.rev_id, t.old_text as `text`
+from revision r
+inner join slots s on r.rev_id = s.slot_revision_id
+inner join content c on s.slot_content_id = c.content_id
+inner join `text` t on c.content_address = concat('tt:', t.old_id)
+""" ;
     ] ;
 .
