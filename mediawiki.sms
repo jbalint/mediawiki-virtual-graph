@@ -1,0 +1,58 @@
+# stardog-admin virtual add --overwrite mediawiki.properties mediawiki.sms
+# (cd $HOME/sw/java-sw/mediawiki-virtual-graph ; stardog-admin virtual add --overwrite mediawiki.properties mediawiki.sms)
+
+prefix mw: <http://github.com/jbalint/mediawiki-virtual-graph#>
+
+# Note that `page_title' needs to be cast. c.f. [BS-128]
+
+# (Also content_address is VARBINARY and Stardog/Calcite tries to cast
+# the expression "AS VARBINARY" which MySQL rejects. So cast the
+# content_address field too)
+
+MAPPING
+FROM SQL {
+  select *, replace(page_title, '_', ' ') as nice_title
+  from (
+    select
+      page_id,
+      p.page_namespace,
+      page_touched,
+      page_latest,
+      concat(coalesce(concat(ns.ns_name, ':'), ''),
+             cast(page_title as char(255))) as page_title
+    from page p left join jbalint_namespaces ns
+    on p.page_namespace = ns.page_namespace
+  ) as it_just_has_to_be_named_for_mysql
+}
+TO {
+  ?page a mw:Page ;
+      mw:pageTitle ?nice_title ;
+      mw:pageNamespaceId "?page_namespace"^^xsd:integer ;
+      mw:pageUrl ?pageUrl ;
+      mw:pageLatestRev ?rev ;
+}
+WHERE {
+  bind(template("http://github.com/jbalint/mediawiki-virtual-graph#Page{page_id}") as ?page)
+  bind(template("https://localhost/mediawiki/index.php/{page_title}") as ?pageUrl)
+  bind(template("http://github.com/jbalint/mediawiki-virtual-graph#Revision{page_latest}") as ?rev)
+}
+
+;
+
+MAPPING
+FROM SQL {
+  select r.rev_id, t.old_text as `text`
+  from revision r
+  inner join slots s on r.rev_id = s.slot_revision_id
+  inner join content c on s.slot_content_id = c.content_id
+  -- putting the complete predicate on the left allows index lookup on the right (`text`)
+  inner join `text` t on substring(cast(c.content_address as char(255)), 1, 3) = 'tt:'
+    and substring(cast(c.content_address as char(255)), 4) = t.old_id
+}
+TO {
+  ?rev a mw:Revision ;
+    mw:text ?text ;
+}
+WHERE {
+  bind(template("http://github.com/jbalint/mediawiki-virtual-graph#Revision{rev_id}") as ?rev)
+}

@@ -9,6 +9,12 @@
 @prefix mw: <http://github.com/jbalint/mediawiki-virtual-graph#> .
 @prefix sm: <tag:stardog:api:mapping:> .
 
+# Note that `page_title' needs to be cast. c.f. [BS-128]
+
+# (Also content_address is VARBINARY and Stardog/Calcite tries to cast
+# the expression "AS VARBINARY" which MySQL rejects. So cast the
+# content_address field too)
+
 mw:Page{page_id} a mw:Page ;
     mw:pageTitle "{nice_title}" ;
     mw:pageNamespaceId "{page_namespace}"^^xsd:integer ;
@@ -23,7 +29,8 @@ select
   p.page_namespace,
   page_touched,
   page_latest,
-  concat(coalesce(concat(ns.ns_name, ':'), ''), page_title) as page_title
+  concat(coalesce(concat(ns.ns_name, ':'), ''),
+         cast(page_title as char(255))) as page_title
 from page p left join jbalint_namespaces ns
 on p.page_namespace = ns.page_namespace
 ) as x
@@ -39,7 +46,7 @@ select r.rev_id, t.old_text as `text`
 from revision r
 inner join slots s on r.rev_id = s.slot_revision_id
 inner join content c on s.slot_content_id = c.content_id
-inner join `text` t on c.content_address = concat('tt:', t.old_id)
+inner join `text` t on cast(c.content_address as char(255)) = concat('tt:', t.old_id)
 """ ;
     ] ;
 .
