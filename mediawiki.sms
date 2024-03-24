@@ -33,7 +33,7 @@ TO {
 }
 WHERE {
   bind(template("http://github.com/jbalint/mediawiki-virtual-graph#Page{page_id}") as ?page)
-  bind(template("https://localhost/mediawiki/index.php/{page_title}") as ?pageUrl)
+  bind(template("https://jessandmorgan.com/mediawiki/index.php/{page_title}") as ?pageUrl)
   bind(template("http://github.com/jbalint/mediawiki-virtual-graph#Revision{page_latest}") as ?rev)
 }
 
